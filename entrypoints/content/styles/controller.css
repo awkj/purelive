@@ -1,0 +1,8 @@
+@import "tailwindcss";
+@import "./slider.css";
+
+@theme {
+  --color-glass-bg: rgba(20, 20, 20, 0.7);
+  --color-glass-border: rgba(255, 255, 255, 0.06);
+  --color-active: #3ea6ff;
+}

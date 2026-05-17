@@ -1,0 +1,333 @@
+{
+  "viewport": {
+    "w": 1920,
+    "h": 963
+  },
+  "htmlClass": "pl-active pl-mode-page",
+  "chain": [
+    {
+      "tag": "VIDEO",
+      "id": "__video2",
+      "cls": "",
+      "rect": {
+        "w": 1920,
+        "h": 963,
+        "top": 0,
+        "left": 0
+      },
+      "pos": "absolute",
+      "h": "963px",
+      "w": "1920px",
+      "maxH": "none",
+      "objectFit": "contain",
+      "overflow": "clip",
+      "inline": null
+    },
+    {
+      "tag": "DIV",
+      "id": null,
+      "cls": "",
+      "rect": {
+        "w": 1920,
+        "h": 963,
+        "top": 0,
+        "left": 0
+      },
+      "pos": "absolute",
+      "h": "963px",
+      "w": "1920px",
+      "maxH": "none",
+      "objectFit": "fill",
+      "overflow": "visible",
+      "inline": null
+    },
+    {
+      "tag": "DIV",
+      "id": "js-player-video-first",
+      "cls": "layout-Player-videoEntity",
+      "rect": {
+        "w": 1920,
+        "h": 963,
+        "top": 0,
+        "left": 0
+      },
+      "pos": "absolute",
+      "h": "963px",
+      "w": "1920px",
+      "maxH": "none",
+      "objectFit": "fill",
+      "overflow": "hidden",
+      "inline": null
+    },
+    {
+      "tag": "DIV",
+      "id": "js-player-multiContainer",
+      "cls": "layout-Player-multiContainer",
+      "rect": {
+        "w": 1920,
+        "h": 963,
+        "top": 0,
+        "left": 0
+      },
+      "pos": "absolute",
+      "h": "963px",
+      "w": "1920px",
+      "maxH": "none",
+      "objectFit": "fill",
+      "overflow": "hidden",
+      "inline": null
+    },
+    {
+      "tag": "DIV",
+      "id": null,
+      "cls": "player__6-Nuo",
+      "rect": {
+        "w": 1920,
+        "h": 963,
+        "top": 0,
+        "left": 0
+      },
+      "pos": "relative",
+      "h": "963px",
+      "w": "1920px",
+      "maxH": "none",
+      "objectFit": "fill",
+      "overflow": "visible",
+      "inline": null
+    },
+    {
+      "tag": "DIV",
+      "id": null,
+      "cls": "container__3RvjJ",
+      "rect": {
+        "w": 1920,
+        "h": 963,
+        "top": 0,
+        "left": 0
+      },
+      "pos": "relative",
+      "h": "963px",
+      "w": "1920px",
+      "maxH": "none",
+      "objectFit": "fill",
+      "overflow": "visible",
+      "inline": null
+    },
+    {
+      "tag": "DIV",
+      "id": "js-player-video",
+      "cls": "core__6FoUQ",
+      "rect": {
+        "w": 1920,
+        "h": 963,
+        "top": 0,
+        "left": 0
+      },
+      "pos": "absolute",
+      "h": "963px",
+      "w": "1920px",
+      "maxH": "none",
+      "objectFit": "fill",
+      "overflow": "visible",
+      "inline": null
+    },
+    {
+      "tag": "DIV",
+      "id": "js-player-video-case",
+      "cls": "core__6FoUQ",
+      "rect": {
+        "w": 1920,
+        "h": 963,
+        "top": 0,
+        "left": 0
+      },
+      "pos": "absolute",
+      "h": "963px",
+      "w": "1920px",
+      "maxH": "none",
+      "objectFit": "fill",
+      "overflow": "visible",
+      "inline": null
+    },
+    {
+      "tag": "DIV",
+      "id": null,
+      "cls": "video__VfhVg",
+      "rect": {
+        "w": 1920,
+        "h": 963,
+        "top": 0,
+        "left": 0
+      },
+      "pos": "relative",
+      "h": "963px",
+      "w": "1920px",
+      "maxH": "none",
+      "objectFit": "fill",
+      "overflow": "visible",
+      "inline": null
+    },
+    {
+      "tag": "DIV",
+      "id": null,
+      "cls": "stream__T55I3",
+      "rect": {
+        "w": 1920,
+        "h": 963,
+        "top": 0,
+        "left": 0
+      },
+      "pos": "fixed",
+      "h": "963px",
+      "w": "1920px",
+      "maxH": "none",
+      "objectFit": "fill",
+      "overflow": "hidden",
+      "inline": null
+    },
+    {
+      "tag": "DIV",
+      "id": null,
+      "cls": "player__jsy1T",
+      "rect": {
+        "w": 1920,
+        "h": 887,
+        "top": 0,
+        "left": 0
+      },
+      "pos": "relative",
+      "h": "887px",
+      "w": "1920px",
+      "maxH": "887px",
+      "objectFit": "fill",
+      "overflow": "visible",
+      "inline": null
+    },
+    {
+      "tag": "DIV",
+      "id": "js-player-main",
+      "cls": "main__a3F0Y",
+      "rect": {
+        "w": 1920,
+        "h": 887,
+        "top": 0,
+        "left": 0
+      },
+      "pos": "relative",
+      "h": "887px",
+      "w": "1920px",
+      "maxH": "none",
+      "objectFit": "fill",
+      "overflow": "visible",
+      "inline": null
+    },
+    {
+      "tag": "DIV",
+      "id": null,
+      "cls": "stage__D8VhO",
+      "rect": {
+        "w": 1920,
+        "h": 887,
+        "top": 0,
+        "left": 0
+      },
+      "pos": "relative",
+      "h": "887px",
+      "w": "1920px",
+      "maxH": "none",
+      "objectFit": "fill",
+      "overflow": "visible",
+      "inline": null
+    },
+    {
+      "tag": "DIV",
+      "id": null,
+      "cls": "",
+      "rect": {
+        "w": 1920,
+        "h": 887,
+        "top": 0,
+        "left": 0
+      },
+      "pos": "static",
+      "h": "887px",
+      "w": "1920px",
+      "maxH": "none",
+      "objectFit": "fill",
+      "overflow": "visible",
+      "inline": null
+    },
+    {
+      "tag": "DIV",
+      "id": null,
+      "cls": "playerWrap__8wGvw",
+      "rect": {
+        "w": 1920,
+        "h": 963,
+        "top": 0,
+        "left": 0
+      },
+      "pos": "relative",
+      "h": "963px",
+      "w": "1920px",
+      "maxH": "none",
+      "objectFit": "fill",
+      "overflow": "visible",
+      "inline": "background-size:auto;background-position:center top;background-repeat:no-repeat;margin-right:auto;vertical-align:top;top:0px;left:0px;width:100%;position:relative;height:1019px;margin-left:auto"
+    },
+    {
+      "tag": "DIV",
+      "id": "root",
+      "cls": "",
+      "rect": {
+        "w": 1920,
+        "h": 963,
+        "top": 0,
+        "left": 0
+      },
+      "pos": "relative",
+      "h": "963px",
+      "w": "1920px",
+      "maxH": "none",
+      "objectFit": "fill",
+      "overflow": "visible",
+      "inline": null
+    },
+    {
+      "tag": "MAIN",
+      "id": null,
+      "cls": "main__S3hsk fixed__y8RnQ hide__6QKOe",
+      "rect": {
+        "w": 1920,
+        "h": 963,
+        "top": 0,
+        "left": 0
+      },
+      "pos": "static",
+      "h": "963px",
+      "w": "1920px",
+      "maxH": "none",
+      "objectFit": "fill",
+      "overflow": "visible",
+      "inline": null
+    },
+    {
+      "tag": "BODY",
+      "id": null,
+      "cls": "ha93761h9mf8 live-next-body",
+      "rect": {
+        "w": 1920,
+        "h": 963,
+        "top": 0,
+        "left": 0
+      },
+      "pos": "static",
+      "h": "963px",
+      "w": "1920px",
+      "maxH": "none",
+      "objectFit": "fill",
+      "overflow": "hidden",
+      "inline": "--player-proxy-holder-ratio: 0.5625;"
+    }
+  ]
+}
