@@ -337,7 +337,7 @@ html.pl-mode-centered #__video_container {
   transform: none !important;
 }
 
-/* ═══ 网页全屏 / 真全屏 ═══ */
+/* ═══ 影院模式 / 真全屏 ═══ */
 /* 显式重置 centered 模式的 transform / aspect-ratio / max-height —— 否则模式切换瞬间
    旧规则在下一帧才被新规则覆盖，元素短暂错位 / 高度不足，露出底层 body 背景（"下方泛白"）。 */
 html.pl-mode-page [class*="stream__"],
@@ -356,7 +356,7 @@ html.pl-mode-fullscreen [class*="stream__"] {
   background: #000 !important;
 }
 
-/* 网页全屏 / 真全屏：<video> 直接 fixed 铺满视口，跳出宿主 flex 布局，
+/* 影院模式 / 真全屏：<video> 直接 fixed 铺满视口，跳出宿主 flex 布局，
    不被斗鱼全屏 fullScreen-* 控制条挤压（控制条 class 命名跟直播内嵌不一样，
    隐藏规则难穷举；让 video 脱离布局是最稳的）。 */
 html.pl-mode-fullscreen video,

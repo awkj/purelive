@@ -55,7 +55,7 @@ html.pl-mode-centered .Video {
   overflow: clip !important;
 }
 
-/* ═══ 网页全屏 / 真全屏：.Video 铺满视口 ═══ */
+/* ═══ 影院模式 / 真全屏：.Video 铺满视口 ═══ */
 html.pl-mode-page .Video,
 html.pl-mode-fullscreen .Video {
   position: fixed !important;
