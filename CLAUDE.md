@@ -39,7 +39,8 @@
 ```
 entrypoints/
   content/
-    index.tsx              # 入口：全局 CSS 注入 + Shadow DOM 挂载 + storage 监听
+    index.tsx              # 动态 content script 入口：停止消息监听 + runtime 启停
+    runtime.tsx            # 全局 CSS、Shadow DOM、Observer 和 React 的完整生命周期
     state.ts               # 发布/订阅 store（useSyncExternalStore，无外部依赖）
     host.ts                # 导出 IS_VOD = location.hostname === 'v.douyu.com'
     global-styles.ts       # 注入入口：按 IS_VOD 选择 LIVE_CSS / VOD_CSS + applyModeClasses()
@@ -67,7 +68,7 @@ entrypoints/
     main.tsx               # Popup 入口
     App.tsx                # 开关 UI（通过 browser.storage.local 与 content script 通信）
     style.css              # Popup Tailwind 样式
-  background.ts            # 空，仅满足 manifest 要求
+  background.ts            # MV3 按 enabled 动态注册/注销 content script；事件驱动、非常驻
 ```
 
 ## 状态管理
@@ -77,13 +78,21 @@ entrypoints/
 - **React 侧**：通过 `useStore()` / `useStoreSelect()` 消费（基于 `useSyncExternalStore`）
 - **非 React 侧**：`subscribe()` + `getState()` + `setState()`
 - **持久化**：`mode`、`hideBarrage`、`enabled` 存储在 `browser.storage.local`
-- **Popup 通信**：Popup 写 storage → content script 监听 `browser.storage.onChanged` → 更新 store
+- **Popup 通信**：Popup 写 storage → background 动态注册/注销 content script；关闭时通知已打开页面完整清理运行时
+
+## 按需运行
+
+- Manifest 不静态声明 `content_scripts`；后台只在 `enabled !== false` 时通过 `browser.scripting` 注册。
+- 关闭后，新开的斗鱼页面不会加载 React/content bundle；已经打开的页面会卸载 React、断开 Observer、清除定时器和事件监听，并移除注入样式。
+- 后台使用 MV3 Service Worker，只在安装、启动和 storage 变化等事件发生时唤醒。
+- Chrome 与 Firefox 构建都固定使用 Manifest V3。
 
 ## 开发命令
 
 ```bash
 pnpm dev          # 开发模式（HMR + 自动重载扩展）
 pnpm build        # 生产构建，输出到 .output/chrome-mv3/
+pnpm build:firefox # Firefox MV3 生产构建
 pnpm wxt zip      # 打包为 .zip
 ```
 

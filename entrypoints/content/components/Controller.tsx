@@ -10,6 +10,7 @@ import DanmakuToggle from './DanmakuToggle';
 import QualityLabel from './QualityLabel';
 import ModeButtons from './ModeButtons';
 import Separator from './Separator';
+import DisableButton from './DisableButton';
 
 const GLASS_BAR =
   "flex items-center gap-0.5 py-1.5 px-2.5 rounded-[14px] bg-[rgba(20,20,20,0.7)] backdrop-blur-[24px] saturate-200 border border-white/6 shadow-[0_8px_32px_rgba(0,0,0,0.45),inset_0_0.5px_0_rgba(255,255,255,0.06)] select-none font-[-apple-system,BlinkMacSystemFont,'Segoe_UI',Roboto,sans-serif] transition-opacity duration-300 z-[2147483647]";
@@ -45,6 +46,8 @@ export default function Controller() {
     return (
       <div className={`absolute top-2 right-2 ${GLASS_BAR} opacity-100 pointer-events-auto`}>
         <ModeButtons />
+        <Separator />
+        <DisableButton />
       </div>
     );
   }
@@ -59,8 +62,10 @@ export default function Controller() {
       {caps.volume && <VolumeControl cap={caps.volume} onSync={syncVideoState} />}
       {caps.barrage && <DanmakuToggle cap={caps.barrage} />}
       {(caps.quality || caps.modeSwitch) && <Separator />}
-      {caps.quality && <QualityLabel />}
+      {caps.quality && <QualityLabel cap={caps.quality} />}
       {caps.modeSwitch && <ModeButtons />}
+      <Separator />
+      <DisableButton />
     </div>
   );
 }

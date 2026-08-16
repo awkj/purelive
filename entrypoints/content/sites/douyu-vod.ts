@@ -80,7 +80,7 @@ html.pl-active .Video > demand-video {
 
 export const DOUYU_VOD: SiteAdapter = {
   id: 'douyu-vod',
-  match: { hosts: ['v.douyu.com'] },
+  match: { hosts: ['v.douyu.com'], path: /^\/show\// },
   globalCss: GLOBAL_CSS,
   anchor: '.Video',
   capabilities: {

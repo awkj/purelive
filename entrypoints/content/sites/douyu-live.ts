@@ -52,38 +52,121 @@ function readCurrentQuality(): string {
   return textLabel?.textContent?.trim() || selected?.textContent?.trim() || '';
 }
 
-function autoSelectQuality(preferences: string[], retries = 0) {
-  if (retries >= 10) return;
+function wait(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
+let hasManualQualitySelection = false;
+let qualityAvailabilityObserver: MutationObserver | null = null;
+let qualityRetryTimer: number | null = null;
+
+function getQualityItems(rateEl: Element): HTMLLIElement[] {
+  return Array.from(rateEl.querySelectorAll<HTMLLIElement>('li')).filter((li) =>
+    Boolean(li.textContent?.trim()),
+  );
+}
+
+function readQualityItems(rateEl: Element): string[] {
+  return getQualityItems(rateEl)
+    .map((li) => li.textContent?.trim() || '')
+    .filter((label, index, labels) => labels.indexOf(label) === index);
+}
+
+async function listQualities(): Promise<string[]> {
+  const rateEl = document.querySelector('[class*="rate-"]');
+  if (!rateEl) return [];
+
+  const immediate = readQualityItems(rateEl);
+  if (immediate.length > 0) return immediate;
+
+  // 部分版本只有 hover 后才把画质项挂进 DOM，先展开再读取。
+  rateEl.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+  await wait(100);
+  const qualities = readQualityItems(rateEl);
+  rateEl.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+  return qualities;
+}
+
+async function selectQuality(target: string): Promise<boolean> {
+  const rateEl = document.querySelector('[class*="rate-"]');
+  if (!rateEl) return false;
+
+  rateEl.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+  await wait(300);
+  const match = Array.from(rateEl.querySelectorAll('li')).find(
+    (li) => li.textContent?.trim() === target,
+  );
+  if (!match) {
+    rateEl.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+    return false;
+  }
+
+  (match as HTMLElement).click();
+  hasManualQualitySelection = true;
+  rateEl.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+  await wait(350);
+  const label = readCurrentQuality();
+  if (label) setState({ qualityLabel: label });
+  return true;
+}
+
+function stopWaitingForQuality() {
+  qualityAvailabilityObserver?.disconnect();
+  qualityAvailabilityObserver = null;
+  if (qualityRetryTimer !== null) {
+    window.clearTimeout(qualityRetryTimer);
+    qualityRetryTimer = null;
+  }
+}
+
+function waitForQualityAvailability() {
+  if (qualityAvailabilityObserver) return;
+  qualityAvailabilityObserver = new MutationObserver(() => {
+    if (!getState().enabled || hasManualQualitySelection) {
+      stopWaitingForQuality();
+      return;
+    }
+    const rateEl = document.querySelector('[class*="rate-"]');
+    if (!rateEl || getQualityItems(rateEl).length === 0) return;
+    stopWaitingForQuality();
+    autoSelectHighestQuality();
+  });
+  qualityAvailabilityObserver.observe(document.documentElement, { childList: true, subtree: true });
+}
+
+function autoSelectHighestQuality() {
+  if (!getState().enabled) return;
+  if (hasManualQualitySelection) return;
   const rateEl = document.querySelector('[class*="rate-"]');
   if (!rateEl) {
-    setTimeout(() => autoSelectQuality(preferences, retries + 1), 1000);
+    waitForQualityAvailability();
     return;
   }
-  const selected = rateEl.querySelector('[class*="selected-"]');
-  if (selected?.textContent?.trim() === preferences[0]) {
-    const label = readCurrentQuality();
-    if (label) setState({ qualityLabel: label });
-    return;
-  }
-  rateEl.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
-  setTimeout(() => {
-    const items = Array.from(rateEl.querySelectorAll('li'));
-    let picked = false;
-    for (const target of preferences) {
-      const match = items.find((li) => li.textContent?.trim() === target);
-      if (match) {
-        (match as HTMLElement).click();
-        picked = true;
-        setTimeout(() => {
-          const label = readCurrentQuality();
-          if (label) setState({ qualityLabel: label });
-        }, 300);
-        break;
-      }
+
+  // 斗鱼原生画质列表固定按从高到低排列。直接选第一个有效项，能覆盖未来新增的
+  // 2K / 4K 或不同帧率标签，不再依赖容易过期的名称白名单。
+  const highest = getQualityItems(rateEl)[0];
+  if (!highest) {
+    // 少数版本 hover 后才创建列表；监听 DOM，同时只做一次短延迟兜底。
+    rateEl.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+    waitForQualityAvailability();
+    if (qualityRetryTimer === null) {
+      qualityRetryTimer = window.setTimeout(() => {
+        qualityRetryTimer = null;
+        autoSelectHighestQuality();
+      }, 100);
     }
-    rateEl.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
-    if (!picked) setTimeout(() => autoSelectQuality(preferences, retries + 1), 2000);
-  }, 300);
+    return;
+  }
+
+  stopWaitingForQuality();
+  const highestLabel = highest.textContent?.trim() || '';
+  if (highestLabel !== readCurrentQuality()) highest.click();
+  rateEl.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+
+  // React 事件通常会同步更新标签；若仍未刷新，先展示已确认存在的最高档名称，
+  // 后续 3 秒轮询会用斗鱼真实选中值校正。
+  setState({ qualityLabel: readCurrentQuality() || highestLabel });
 }
 
 function requestFullscreen() {
@@ -102,6 +185,15 @@ function setCursorHidden(hidden: boolean) {
 // 内部容器尺寸监听（对抗斗鱼 JS 动态设像素尺寸）。
 // 不在 capability 接口里，由 index.tsx 在 douyu-live 启用时直接调用导出函数。
 let dimensionObserver: MutationObserver | null = null;
+const originalDimensions = new Map<
+  HTMLElement,
+  {
+    width: string;
+    widthPriority: string;
+    height: string;
+    heightPriority: string;
+  }
+>();
 
 export function watchInnerDimensions() {
   if (dimensionObserver) return;
@@ -116,14 +208,28 @@ export function watchInnerDimensions() {
     }
   });
   for (const sel of selectors) {
-    const el = document.querySelector(sel);
-    if (el) dimensionObserver.observe(el, { attributes: true, attributeFilter: ['style'] });
+    const el = document.querySelector<HTMLElement>(sel);
+    if (!el) continue;
+    originalDimensions.set(el, {
+      width: el.style.getPropertyValue('width'),
+      widthPriority: el.style.getPropertyPriority('width'),
+      height: el.style.getPropertyValue('height'),
+      heightPriority: el.style.getPropertyPriority('height'),
+    });
+    dimensionObserver.observe(el, { attributes: true, attributeFilter: ['style'] });
   }
 }
 
 export function unwatchInnerDimensions() {
   dimensionObserver?.disconnect();
   dimensionObserver = null;
+  for (const [el, original] of originalDimensions) {
+    if (original.width) el.style.setProperty('width', original.width, original.widthPriority);
+    else el.style.removeProperty('width');
+    if (original.height) el.style.setProperty('height', original.height, original.heightPriority);
+    else el.style.removeProperty('height');
+  }
+  originalDimensions.clear();
 }
 
 const GLOBAL_CSS = `
@@ -389,9 +495,16 @@ html.pl-hide-barrage [class*="danmu"] {
 
 export const DOUYU_LIVE: SiteAdapter = {
   id: 'douyu-live',
-  match: { hosts: ['www.douyu.com'] },
+  match: { hosts: ['www.douyu.com'], path: /^\/\d+\/?$/ },
   globalCss: GLOBAL_CSS,
   anchor: '[class*="video__"]',
+  activate: watchInnerDimensions,
+  deactivate: () => {
+    stopWaitingForQuality();
+    unwatchInnerDimensions();
+    setCursorHidden(false);
+    hasManualQualitySelection = false;
+  },
   capabilities: {
     video: { getVideo },
     playPause: {
@@ -401,7 +514,12 @@ export const DOUYU_LIVE: SiteAdapter = {
       },
     },
     volume: { set: setVideoVolume, toggleMute },
-    quality: { read: readCurrentQuality, autoSelect: autoSelectQuality },
+    quality: {
+      read: readCurrentQuality,
+      list: listQualities,
+      select: selectQuality,
+      autoSelectHighest: autoSelectHighestQuality,
+    },
     barrage: {
       setHidden: (hidden) => setState({ hideBarrage: hidden }),
       setMode: (label) => {

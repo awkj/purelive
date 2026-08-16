@@ -24,7 +24,8 @@ const DEFAULT_STATE: DycState = {
   volume: 1,
   muted: false,
   isPlaying: false,
-  qualityLabel: '原画2K60',
+  // 由斗鱼播放器 DOM 同步真实值；不能预填最高画质，否则播放器加载期间会短暂显示假状态。
+  qualityLabel: '',
   isIdle: false,
 };
 
@@ -36,6 +37,10 @@ export function getState(): DycState {
 }
 
 export function setState(partial: Partial<DycState>) {
+  const changed = (Object.keys(partial) as (keyof DycState)[]).some(
+    (key) => state[key] !== partial[key],
+  );
+  if (!changed) return;
   state = { ...state, ...partial };
   listeners.forEach((fn) => fn());
 }
@@ -58,16 +63,32 @@ export async function loadPersistedState() {
     const stored = await browser.storage.local.get(['mode', 'hideBarrage', 'barrageMode', 'enabled']);
     const m = stored.mode as string;
     const bm = stored.barrageMode as string;
-    setState({
+    const persisted = {
       mode: m === 'centered' || m === 'page' || m === 'fullscreen' ? m : 'centered',
       hideBarrage: Boolean(stored.hideBarrage),
       barrageMode: (BARRAGE_MODES as string[]).includes(bm) ? (bm as BarrageMode) : '1/4屏',
       enabled: stored.enabled !== false,
-    });
+    } satisfies Pick<DycState, 'mode' | 'hideBarrage' | 'barrageMode' | 'enabled'>;
+    setState(persisted);
+    lastPersistedSnapshot = JSON.stringify(persisted);
   } catch {}
 }
 
+let lastPersistedSnapshot = '';
+
 export function persistState() {
   const { mode, hideBarrage, barrageMode, enabled } = getState();
-  browser.storage.local.set({ mode, hideBarrage, barrageMode, enabled }).catch(() => {});
+  const persisted = { mode, hideBarrage, barrageMode, enabled };
+  const snapshot = JSON.stringify(persisted);
+  if (snapshot === lastPersistedSnapshot) return;
+  lastPersistedSnapshot = snapshot;
+  try {
+    // 扩展被重新加载后，旧 content script 调用 API 时可能在返回 Promise 前同步抛错。
+    void browser.storage.local.set(persisted).catch(() => {
+      // 失败后允许下一次状态通知重试。
+      if (lastPersistedSnapshot === snapshot) lastPersistedSnapshot = '';
+    });
+  } catch {
+    if (lastPersistedSnapshot === snapshot) lastPersistedSnapshot = '';
+  }
 }

@@ -16,7 +16,9 @@ export type VolumeCap = {
 
 export type QualityCap = {
   read: () => string;
-  autoSelect: (preferences: string[]) => void;
+  list: () => Promise<string[]>;
+  select: (quality: string) => Promise<boolean>;
+  autoSelectHighest: () => void;
 };
 
 export type BarrageCap = {
@@ -52,4 +54,6 @@ export interface SiteAdapter {
   globalCss: string;
   anchor: string;
   capabilities: SiteCapabilities;
+  activate?: () => void;
+  deactivate?: () => void;
 }
