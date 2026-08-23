@@ -1,8 +1,12 @@
 import { MATCH_PATTERNS } from './content/sites/site-patterns';
 
-const CONTENT_SCRIPT_ID = 'purelive-runtime';
-const CONTENT_SCRIPT_FILE = 'content-scripts/content.js';
-const CONTENT_SCRIPT_PUBLIC_PATH = '/content-scripts/content.js';
+const RUNTIME_SCRIPT_ID = 'purelive-runtime';
+const RUNTIME_SCRIPT_FILE = 'content-scripts/content.js';
+const RUNTIME_SCRIPT_PUBLIC_PATH = '/content-scripts/content.js';
+const QUALITY_LOCK_SCRIPT_ID = 'purelive-douyu-quality-lock';
+const QUALITY_LOCK_SCRIPT_FILE = 'content-scripts/douyu-quality-lock.js';
+const QUALITY_LOCK_SCRIPT_PUBLIC_PATH = '/content-scripts/douyu-quality-lock.js';
+const CONTENT_SCRIPT_IDS = [QUALITY_LOCK_SCRIPT_ID, RUNTIME_SCRIPT_ID];
 const STOP_MESSAGE = 'purelive:stop';
 let syncQueue = Promise.resolve();
 
@@ -27,12 +31,18 @@ async function stopOpenPages() {
 async function injectOpenPages() {
   const tabs = await getMatchingTabs();
   await Promise.all(
-    tabs.map(async ({ id }) => {
+    tabs.map(async ({ id, url }) => {
       if (id == null) return;
       try {
+        const isDouyuLive = url
+          ? new URL(url).hostname === 'www.douyu.com'
+          : false;
         await browser.scripting.executeScript({
           target: { tabId: id },
-          files: [CONTENT_SCRIPT_PUBLIC_PATH],
+          // 斗鱼已打开页面先装画质锁再启动 UI；其他站点只注入通用运行时。
+          files: isDouyuLive
+            ? [QUALITY_LOCK_SCRIPT_PUBLIC_PATH, RUNTIME_SCRIPT_PUBLIC_PATH]
+            : [RUNTIME_SCRIPT_PUBLIC_PATH],
         });
       } catch {
         // 标签页可能仍在加载；下次导航会由动态注册项自动注入。
@@ -43,29 +53,40 @@ async function injectOpenPages() {
 
 async function registerContentScript() {
   const registrations = await browser.scripting.getRegisteredContentScripts({
-    ids: [CONTENT_SCRIPT_ID],
+    ids: CONTENT_SCRIPT_IDS,
   });
-  const definition = {
-    id: CONTENT_SCRIPT_ID,
-    matches: MATCH_PATTERNS,
-    js: [CONTENT_SCRIPT_FILE],
-    runAt: 'document_end' as const,
-    persistAcrossSessions: true,
-  };
+  const definitions = [
+    {
+      id: QUALITY_LOCK_SCRIPT_ID,
+      matches: ['*://www.douyu.com/*'],
+      js: [QUALITY_LOCK_SCRIPT_FILE],
+      runAt: 'document_start' as const,
+      persistAcrossSessions: true,
+    },
+    {
+      id: RUNTIME_SCRIPT_ID,
+      matches: MATCH_PATTERNS,
+      js: [RUNTIME_SCRIPT_FILE],
+      runAt: 'document_end' as const,
+      persistAcrossSessions: true,
+    },
+  ];
+  const registeredIds = new Set(registrations.map(({ id }) => id));
+  const updates = definitions.filter(({ id }) => registeredIds.has(id));
+  const additions = definitions.filter(({ id }) => !registeredIds.has(id));
 
-  if (registrations.length > 0) {
-    await browser.scripting.updateContentScripts([definition]);
-  } else {
-    await browser.scripting.registerContentScripts([definition]);
-  }
+  if (updates.length > 0) await browser.scripting.updateContentScripts(updates);
+  if (additions.length > 0) await browser.scripting.registerContentScripts(additions);
 }
 
 async function unregisterContentScript() {
   const registrations = await browser.scripting.getRegisteredContentScripts({
-    ids: [CONTENT_SCRIPT_ID],
+    ids: CONTENT_SCRIPT_IDS,
   });
   if (registrations.length > 0) {
-    await browser.scripting.unregisterContentScripts({ ids: [CONTENT_SCRIPT_ID] });
+    await browser.scripting.unregisterContentScripts({
+      ids: registrations.map(({ id }) => id),
+    });
   }
 }
 

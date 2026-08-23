@@ -2,6 +2,7 @@
 
 import { getState, setState } from '../state';
 import type { SiteAdapter } from './types';
+import { getDefaultQualityItem, getQualityItems } from './douyu-quality';
 
 function getVideo(): HTMLVideoElement | null {
   return document.querySelector('video');
@@ -49,7 +50,7 @@ function readCurrentQuality(): string {
   if (!rateEl) return '';
   const textLabel = rateEl.querySelector('[class*="textLabel-"]');
   const selected = rateEl.querySelector('[class*="selected-"]');
-  return textLabel?.textContent?.trim() || selected?.textContent?.trim() || '';
+  return selected?.textContent?.trim() || textLabel?.textContent?.trim() || '';
 }
 
 function wait(ms: number) {
@@ -59,12 +60,6 @@ function wait(ms: number) {
 let hasManualQualitySelection = false;
 let qualityAvailabilityObserver: MutationObserver | null = null;
 let qualityRetryTimer: number | null = null;
-
-function getQualityItems(rateEl: Element): HTMLLIElement[] {
-  return Array.from(rateEl.querySelectorAll<HTMLLIElement>('li')).filter((li) =>
-    Boolean(li.textContent?.trim()),
-  );
-}
 
 function readQualityItems(rateEl: Element): string[] {
   return getQualityItems(rateEl)
@@ -143,9 +138,8 @@ function autoSelectHighestQuality() {
     return;
   }
 
-  // 斗鱼原生画质列表固定按从高到低排列。直接选第一个有效项，能覆盖未来新增的
-  // 2K / 4K 或不同帧率标签，不再依赖容易过期的名称白名单。
-  const highest = getQualityItems(rateEl)[0];
+  // 明确锁定 1080P60；该档不存在时才退回斗鱼列表中的最高可用项。
+  const highest = getDefaultQualityItem(rateEl);
   if (!highest) {
     // 少数版本 hover 后才创建列表；监听 DOM，同时只做一次短延迟兜底。
     rateEl.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
@@ -273,6 +267,18 @@ html.pl-active > body > *:not(main):not(script):not(style):not(link):not(svg) {
 /* ═══ #root 内清理 ═══ */
 html.pl-active [class*="wm-general"] { display: none !important; }
 html.pl-active [class*="bc-wrapper"] { display: none !important; }
+
+/* 斗鱼隐藏顶栏后仍会通过 #js-player-main::before 保留 60px 顶栏下方的 8px 浅色间隔。 */
+html.pl-active #js-player-main::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* 播放器之后的鱼吧/主播动态区域仍处于页面流中，窗口底部会露出其白色标签栏。 */
+html.pl-active #js-bottom-left,
+html.pl-active .layout-Bottom-mainEntity {
+  display: none !important;
+}
 
 /* ═══ playerWrap 内 ═══ */
 html.pl-active [class*="playerBackgroundBlur"],

@@ -42,7 +42,13 @@ export default function ModeButtons() {
         return (
           <Tooltip key={key} label={labelFor(key, active)}>
             <button
-              onClick={() => setMode(key)}
+              aria-label={labelFor(key, active)}
+              onClick={(event) => {
+                setMode(key);
+                // 鼠标点击全屏后浏览器会保留按钮焦点，导致原生 focus ring 持续显示。
+                // 键盘触发的 click.detail 为 0，保留其焦点反馈。
+                if (event.detail > 0) event.currentTarget.blur();
+              }}
               className={`inline-flex items-center justify-center w-[38px] h-[38px] rounded-[10px] cursor-pointer transition-all duration-150 shrink-0 hover:bg-white/10 hover:text-white active:scale-92 ${active ? 'text-[#3ea6ff]' : 'text-white/88'}`}
             >
               {iconFor(key, active)}

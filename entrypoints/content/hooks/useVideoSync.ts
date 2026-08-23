@@ -10,29 +10,38 @@ export function useVideoSync(
     let el: HTMLVideoElement | null = null;
     let retryTimer: number;
 
+    function unbind() {
+      if (!el) return;
+      el.removeEventListener('play', onSync!);
+      el.removeEventListener('pause', onSync!);
+      el.removeEventListener('playing', onSync!);
+      el.removeEventListener('volumechange', onSync!);
+      el = null;
+    }
+
     function bind() {
-      el = video!.getVideo();
-      if (!el) {
-        retryTimer = window.setTimeout(bind, 1000);
-        return;
+      const next = video!.getVideo();
+      // 虎牙切换画质时会替换 <video> 节点。持续低频检查并重绑，避免控制栏
+      // 继续显示旧节点的播放、暂停和音量状态。
+      if (next !== el) {
+        unbind();
+        el = next;
+        if (el) {
+          el.addEventListener('play', onSync!);
+          el.addEventListener('pause', onSync!);
+          el.addEventListener('playing', onSync!);
+          el.addEventListener('volumechange', onSync!);
+          onSync!();
+        }
       }
-      el.addEventListener('play', onSync!);
-      el.addEventListener('pause', onSync!);
-      el.addEventListener('playing', onSync!);
-      el.addEventListener('volumechange', onSync!);
-      onSync!();
+      retryTimer = window.setTimeout(bind, 1000);
     }
 
     bind();
 
     return () => {
       clearTimeout(retryTimer);
-      if (el) {
-        el.removeEventListener('play', onSync!);
-        el.removeEventListener('pause', onSync!);
-        el.removeEventListener('playing', onSync!);
-        el.removeEventListener('volumechange', onSync!);
-      }
+      unbind();
     };
   }, [video, onSync]);
 }
